@@ -365,6 +365,9 @@ bool mpu9250CompassDetect(magDev_t * mag)
 
     if (busDev->busType == BUSTYPE_I2C) {
         for (int retryCount = 0; retryCount < DETECTION_MAX_RETRY_COUNT; retryCount++) {
+            busWrite(busDev, MPU_RA_PWR_MGMT_1, 0x8); // Disable gyro
+            delay(15);
+
             busWrite(busDev, MPU_RA_USER_CTRL, 0x0); // Disable I2C master
             delay(15);
 
@@ -373,9 +376,6 @@ bool mpu9250CompassDetect(magDev_t * mag)
 
             // open real mag I2C device
             if (ak8963Detect(mag)) {
-                busWrite(mag->busDev, AK8963_MAG_REG_CNTL, 0x12); // continuous mode 16 bit for mag
-                delay(15);
-
                 return true;
             }
         }
