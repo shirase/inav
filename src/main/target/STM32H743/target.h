@@ -28,6 +28,7 @@
 
 #define BEEPER                  PA15
 #define BEEPER_INVERTED
+#define BEEPER_PWM
 #define BEEPER_PWM_FREQUENCY    2500
 
 // *************** IMU generic ***********************
