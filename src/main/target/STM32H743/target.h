@@ -26,17 +26,17 @@
 #define LED0                    PC0
 #define LED1                    PC1
 
-/*#define BEEPER                  PA15
+#define BEEPER                  PA15
 #define BEEPER_INVERTED
 #define BEEPER_PWM
-#define BEEPER_PWM_FREQUENCY    2500*/
+#define BEEPER_PWM_FREQUENCY    2500
 
 // *************** IMU generic ***********************
 //#define USE_DUAL_GYRO
 //#define USE_TARGET_IMU_HARDWARE_DESCRIPTORS
 
-/*#define USE_EXTI
-#define USE_MPU_DATA_READY_SIGNAL*/
+#define USE_EXTI
+#define USE_MPU_DATA_READY_SIGNAL
 
 #define USE_IMU_FAKE
 
@@ -87,19 +87,18 @@
 #define SPI3_MOSI_PIN           PB5
 
 #define USE_MAG_RM3100
-#define RM3100_CS_PIN           PE2   //CS2 pad
-//                              PD4   //CS1 pad
+#define RM3100_CS_PIN           PD4   //CS2 pad
 #define RM3100_SPI_BUS          BUS_SPI3*/
 
 // *************** I2C /Baro/Mag *********************
-/*#define USE_I2C
+#define USE_I2C
 #define USE_I2C_DEVICE_1
 #define I2C1_SCL                PB6
 #define I2C1_SDA                PB7
 
 #define USE_I2C_DEVICE_2
-#define I2C2_SCL                PB10
-#define I2C2_SDA                PB11
+#define I2C2_SCL                PE9
+#define I2C2_SDA                PE10
 
 #define USE_BARO
 #define BARO_I2C_BUS            BUS_I2C2
@@ -121,12 +120,10 @@
 #define PITOT_I2C_BUS           BUS_I2C2
 
 #define USE_RANGEFINDER
-#define RANGEFINDER_I2C_BUS     BUS_I2C1*/
+#define RANGEFINDER_I2C_BUS     BUS_I2C1
 
 // *************** UART *****************************
 #define USE_VCP
-//#define USB_DETECT_PIN          PC14
-//#define USE_USB_DETECT
 
 #define USE_UART1
 #define UART1_TX_PIN            PA9
@@ -174,7 +171,7 @@
 //#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
 
 // *************** ADC *****************************
-/*#define USE_ADC
+#define USE_ADC
 #define ADC_INSTANCE                ADC1
 
 #define ADC_CHANNEL_1_PIN           PC0  //ADC123 VBAT1
@@ -187,7 +184,7 @@
 #define VBAT_ADC_CHANNEL            ADC_CHN_1
 #define CURRENT_METER_ADC_CHANNEL   ADC_CHN_2
 #define RSSI_ADC_CHANNEL            ADC_CHN_3
-#define AIRSPEED_ADC_CHANNEL        ADC_CHN_4*/
+#define AIRSPEED_ADC_CHANNEL        ADC_CHN_4
 
 // *************** PINIO ***************************
 #define USE_PINIO
@@ -196,8 +193,8 @@
 #define PINIO2_PIN                  PD15  // 2xCamera switcher
 
 // *************** LEDSTRIP ************************
-/*#define USE_LED_STRIP
-#define WS2811_PIN                  PA8*/
+#define USE_LED_STRIP
+#define WS2811_PIN                  PA8
 
 //#define DEFAULT_FEATURES            (FEATURE_OSD | FEATURE_TELEMETRY | FEATURE_CURRENT_METER | FEATURE_VBAT | FEATURE_TX_PROF_SEL | FEATURE_BLACKBOX)
 #define CURRENT_METER_SCALE         250
