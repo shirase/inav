@@ -21,22 +21,27 @@
 #define TARGET_BOARD_IDENTIFIER "H743"
 #define USBD_PRODUCT_STRING     "STM32H743"
 
-#define USE_TARGET_CONFIG
+//#define USE_TARGET_CONFIG
 
-#define LED0                    PE3
-#define LED1                    PE4
+#define LED0                    PC0
+#define LED1                    PC1
 
-#define BEEPER                  PA15
+/*#define BEEPER                  PA15
 #define BEEPER_INVERTED
 #define BEEPER_PWM
-#define BEEPER_PWM_FREQUENCY    2500
+#define BEEPER_PWM_FREQUENCY    2500*/
 
 // *************** IMU generic ***********************
-#define USE_DUAL_GYRO
-#define USE_TARGET_IMU_HARDWARE_DESCRIPTORS
+//#define USE_DUAL_GYRO
+//#define USE_TARGET_IMU_HARDWARE_DESCRIPTORS
 
-#define USE_EXTI
-#define USE_MPU_DATA_READY_SIGNAL
+/*#define USE_EXTI
+#define USE_MPU_DATA_READY_SIGNAL*/
+
+#define USE_IMU_FAKE
+
+/*#define USE_MAG_MPU9250
+#define USE_MAG_AK8963*/
 
 // *************** SPI1 IMU1 *************************
 #define USE_SPI
@@ -45,15 +50,15 @@
 #define SPI1_MISO_PIN           PA6
 #define SPI1_MOSI_PIN           PD7
 
-#define USE_IMU_MPU6000
+/*#define USE_IMU_MPU6000
 
 #define IMU1_ALIGN              CW0_DEG_FLIP
 #define IMU1_SPI_BUS            BUS_SPI1
 #define IMU1_CS_PIN             PC15
-#define IMU1_EXTI_PIN           PB2
+#define IMU1_EXTI_PIN           PB1*/
 
 // *************** SPI4 IMU2 *************************
-#define USE_SPI_DEVICE_4
+/*#define USE_SPI_DEVICE_4
 #define SPI4_SCK_PIN            PE12
 #define SPI4_MISO_PIN           PE13
 #define SPI4_MOSI_PIN           PE14
@@ -63,20 +68,20 @@
 #define IMU2_ALIGN              CW0_DEG_FLIP
 #define IMU2_SPI_BUS            BUS_SPI4
 #define IMU2_CS_PIN             PE11
-#define IMU2_EXTI_PIN           PE15
+#define IMU2_EXTI_PIN           PE15*/
 
 // *************** SPI2 OSD ***********************
-#define USE_SPI_DEVICE_2
+/*#define USE_SPI_DEVICE_2
 #define SPI2_SCK_PIN            PB13
 #define SPI2_MISO_PIN           PB14
 #define SPI2_MOSI_PIN           PB15
 
 #define USE_MAX7456
 #define MAX7456_SPI_BUS         BUS_SPI2
-#define MAX7456_CS_PIN          PB12
+#define MAX7456_CS_PIN          PB12*/
 
 // *************** SPI3 SPARE for external RM3100 ***********
-#define USE_SPI_DEVICE_3
+/*#define USE_SPI_DEVICE_3
 #define SPI3_SCK_PIN            PB3
 #define SPI3_MISO_PIN           PB4
 #define SPI3_MOSI_PIN           PB5
@@ -84,10 +89,10 @@
 #define USE_MAG_RM3100
 #define RM3100_CS_PIN           PE2   //CS2 pad
 //                              PD4   //CS1 pad
-#define RM3100_SPI_BUS          BUS_SPI3
+#define RM3100_SPI_BUS          BUS_SPI3*/
 
 // *************** I2C /Baro/Mag *********************
-#define USE_I2C
+/*#define USE_I2C
 #define USE_I2C_DEVICE_1
 #define I2C1_SCL                PB6
 #define I2C1_SDA                PB7
@@ -116,10 +121,12 @@
 #define PITOT_I2C_BUS           BUS_I2C2
 
 #define USE_RANGEFINDER
-#define RANGEFINDER_I2C_BUS     BUS_I2C1
+#define RANGEFINDER_I2C_BUS     BUS_I2C1*/
 
 // *************** UART *****************************
 #define USE_VCP
+//#define USB_DETECT_PIN          PC14
+//#define USE_USB_DETECT
 
 #define USE_UART1
 #define UART1_TX_PIN            PA9
@@ -167,7 +174,7 @@
 //#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
 
 // *************** ADC *****************************
-#define USE_ADC
+/*#define USE_ADC
 #define ADC_INSTANCE                ADC1
 
 #define ADC_CHANNEL_1_PIN           PC0  //ADC123 VBAT1
@@ -180,19 +187,19 @@
 #define VBAT_ADC_CHANNEL            ADC_CHN_1
 #define CURRENT_METER_ADC_CHANNEL   ADC_CHN_2
 #define RSSI_ADC_CHANNEL            ADC_CHN_3
-#define AIRSPEED_ADC_CHANNEL        ADC_CHN_4
+#define AIRSPEED_ADC_CHANNEL        ADC_CHN_4*/
 
 // *************** PINIO ***************************
 #define USE_PINIO
 #define USE_PINIOBOX
-#define PINIO1_PIN                  PD10  // VTX power switcher
-#define PINIO2_PIN                  PD11  // 2xCamera switcher
+#define PINIO1_PIN                  PD14  // VTX power switcher
+#define PINIO2_PIN                  PD15  // 2xCamera switcher
 
 // *************** LEDSTRIP ************************
-#define USE_LED_STRIP
-#define WS2811_PIN                  PA8
+/*#define USE_LED_STRIP
+#define WS2811_PIN                  PA8*/
 
-#define DEFAULT_FEATURES            (FEATURE_OSD | FEATURE_TELEMETRY | FEATURE_CURRENT_METER | FEATURE_VBAT | FEATURE_TX_PROF_SEL | FEATURE_BLACKBOX)
+//#define DEFAULT_FEATURES            (FEATURE_OSD | FEATURE_TELEMETRY | FEATURE_CURRENT_METER | FEATURE_VBAT | FEATURE_TX_PROF_SEL | FEATURE_BLACKBOX)
 #define CURRENT_METER_SCALE         250
 
 #define USE_SERIAL_4WAY_BLHELI_INTERFACE
