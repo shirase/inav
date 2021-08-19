@@ -21,7 +21,7 @@
 #define TARGET_BOARD_IDENTIFIER "H743"
 #define USBD_PRODUCT_STRING     "STM32H743"
 
-//#define USE_TARGET_CONFIG
+#define USE_TARGET_CONFIG
 
 #define LED0                    PC0
 #define LED1                    PC1
