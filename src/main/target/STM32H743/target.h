@@ -33,29 +33,29 @@
 
 // *************** IMU generic ***********************
 //#define USE_DUAL_GYRO
-//#define USE_TARGET_IMU_HARDWARE_DESCRIPTORS
+#define USE_TARGET_IMU_HARDWARE_DESCRIPTORS
 
 #define USE_EXTI
-#define USE_MPU_DATA_READY_SIGNAL
+//#define USE_MPU_DATA_READY_SIGNAL
 
-#define USE_IMU_FAKE
+//#define USE_IMU_FAKE
 
-/*#define USE_MAG_MPU9250
-#define USE_MAG_AK8963*/
+#define USE_MAG_MPU9250
+#define USE_MAG_AK8963
 
 // *************** SPI1 IMU1 *************************
 #define USE_SPI
 #define USE_SPI_DEVICE_1
 #define SPI1_SCK_PIN            PA5
 #define SPI1_MISO_PIN           PA6
-#define SPI1_MOSI_PIN           PD7
+#define SPI1_MOSI_PIN           PA4
 
-/*#define USE_IMU_MPU6000
-
-#define IMU1_ALIGN              CW0_DEG_FLIP
+#define IMU1_ALIGN              CW0_DEG
 #define IMU1_SPI_BUS            BUS_SPI1
-#define IMU1_CS_PIN             PC15
-#define IMU1_EXTI_PIN           PB1*/
+#define IMU1_CS_PIN             PA7
+#define IMU1_EXTI_PIN           PB1
+
+#define USE_IMU_MPU9250
 
 // *************** SPI4 IMU2 *************************
 /*#define USE_SPI_DEVICE_4
@@ -178,8 +178,8 @@
 #define ADC_CHANNEL_2_PIN           PC1  //ADC123 CURR1
 #define ADC_CHANNEL_3_PIN           PC5  //ADC12  RSSI
 #define ADC_CHANNEL_4_PIN           PC4  //ADC12  AirS
-#define ADC_CHANNEL_5_PIN           PA4  //ADC12  VB2
-#define ADC_CHANNEL_6_PIN           PA7  //ADC12  CU2
+//#define ADC_CHANNEL_5_PIN           PA4  //ADC12  VB2
+//#define ADC_CHANNEL_6_PIN           PA7  //ADC12  CU2
 
 #define VBAT_ADC_CHANNEL            ADC_CHN_1
 #define CURRENT_METER_ADC_CHANNEL   ADC_CHN_2
