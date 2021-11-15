@@ -48,12 +48,12 @@
 #define USE_SPI_DEVICE_1
 #define SPI1_SCK_PIN            PA5
 #define SPI1_MISO_PIN           PA6
-#define SPI1_MOSI_PIN           PA4
+#define SPI1_MOSI_PIN           PA7
 
 #define IMU1_ALIGN              CW0_DEG
 #define IMU1_SPI_BUS            BUS_SPI1
-#define IMU1_CS_PIN             PA7
-#define IMU1_EXTI_PIN           PB1
+#define IMU1_CS_PIN             PA4
+#define IMU1_EXTI_PIN           NONE
 
 #define USE_IMU_MPU9250
 

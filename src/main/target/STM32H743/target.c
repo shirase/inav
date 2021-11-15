@@ -26,7 +26,7 @@
 #include "drivers/pinio.h"
 #include "drivers/sensor.h"
 
-BUSDEV_REGISTER_SPI_TAG(busdev_imu1_9250,   DEVHW_MPU9250,  IMU1_SPI_BUS,   IMU1_CS_PIN,    NONE,  0,  DEVFLAGS_NONE,  IMU1_ALIGN);
+BUSDEV_REGISTER_SPI_TAG(busdev_mpu9250,   DEVHW_MPU9250,  IMU1_SPI_BUS,   IMU1_CS_PIN,    IMU1_EXTI_PIN,  0,  DEVFLAGS_NONE,  IMU1_ALIGN);
 
 const timerHardware_t timerHardware[] = {
     DEF_TIM(TIM3, CH3, PB0, TIM_USE_MC_MOTOR | TIM_USE_FW_MOTOR, 0, 1),   // S1
