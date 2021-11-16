@@ -42,6 +42,8 @@
 
 #include "drivers/compass/compass_ak8963.h"
 
+#include "drivers/light_led.h"
+
 #if defined(USE_MAG_MPU9250)
 
 // No separate hardware descriptor needed. Hardware descriptor initialization is handled by GYRO driver
@@ -105,6 +107,9 @@ static int16_t cachedMagData[3];
 
 static bool mpu9250SlaveI2CRead(magDev_t * mag, uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len)
 {
+    // clean read register
+    busReadBuf(mag->busDev, MPU_RA_EXT_SENS_DATA_00, buf, len);
+
     // Setting up MPU9250's I2C master to read from AK8963 via internal I2C bus
     busWrite(mag->busDev, MPU_RA_I2C_SLV0_ADDR, addr | READ_FLAG);     // set I2C slave address for read
     busWrite(mag->busDev, MPU_RA_I2C_SLV0_REG, reg);                   // set I2C slave register
@@ -313,38 +318,40 @@ static bool mpu9250DeviceDetect(busDevice_t * dev)
 
 bool mpu9250CompassDetect(magDev_t * mag)
 {
-    busDevice_t * busDev; // MPU9250 bus device
-
-    // Compass on MPU9250 is only supported if MPU9250 is connected to SPI bus
     // FIXME: We need to use gyro_to_use here, not mag_to_use
-    busDev = busDeviceInit(BUSTYPE_ANY, DEVHW_MPU9250, mag->magSensorToUse, OWNER_COMPASS);
-    if (busDev == NULL) {
-        return false;
+    mag->busDev = busDeviceOpen(BUSTYPE_SPI, DEVHW_MPU9250, mag->magSensorToUse);
+    if (mag->busDev == NULL) {
+        // If not use MPU9250 as gyro, init MPU9250
+
+        mag->busDev = busDeviceInit(BUSTYPE_ANY, DEVHW_MPU9250, mag->magSensorToUse, OWNER_COMPASS);
+        if (mag->busDev == NULL) {
+            return false;
+        }
+
+        if (!mpu9250DeviceDetect(mag->busDev)) {
+            busDeviceDeInit(mag->busDev);
+            return false;
+        }
     }
 
-    if (!mpu9250DeviceDetect(busDev)) {
-        busDeviceDeInit(busDev);
-        return false;
-    }
-
-    if (busDev->busType == BUSTYPE_SPI) {
+    if (mag->busDev->busType == BUSTYPE_SPI) {
         // Check if Gyro driver initialized the chip
-        /*mpuContextData_t * ctx = busDeviceGetScratchpadMemory(busDev);
+        mpuContextData_t * ctx = busDeviceGetScratchpadMemory(mag->busDev);
         if (ctx->chipMagicNumber != 0x9250) {
             return false;
-        }*/
+        }
 
-        busSetSpeed(busDev, BUS_SPEED_INITIALIZATION);
+        busSetSpeed(mag->busDev, BUS_SPEED_INITIALIZATION);
 
         for (int retryCount = 0; retryCount < DETECTION_MAX_RETRY_COUNT; retryCount++) {
             bool ack = false;
             uint8_t sig = 0;
 
             // Initialize I2C master via SPI bus (MPU9250)
-            busWrite(busDev, MPU_RA_INT_PIN_CFG, 0x10);       // INT_ANYRD_2CLEAR
+            busWrite(mag->busDev, MPU_RA_INT_PIN_CFG, 0x10);       // INT_ANYRD_2CLEAR
             delay(15);
 
-            busWrite(busDev, MPU_RA_I2C_MST_CTRL, 0x0D);      // I2C multi-master / 400kHz
+            busWrite(mag->busDev, MPU_RA_I2C_MST_CTRL, 0x0D);      // I2C multi-master / 400kHz
             delay(15);
 
             busWrite(mag->busDev, MPU_RA_USER_CTRL, 0x30);         // I2C master mode, SPI mode only
@@ -353,25 +360,25 @@ bool mpu9250CompassDetect(magDev_t * mag)
             // check for AK8963
             ack = mpu9250SlaveI2CRead(mag, AK8963_MAG_I2C_ADDRESS, AK8963_MAG_REG_WHO_AM_I, &sig, 1);
             if (ack && sig == AK8963_DEVICE_ID) { // 0x48 / 01001000 / 'H'
-                mag->busDev = busDev;
+                LED2_ON;
                 mag->init = mpu9250CompassInit;
                 mag->read = mpu9250CompassRead;
                 return true;
             }
         }
 
-        busSetSpeed(busDev, BUS_SPEED_FAST);
+        busSetSpeed(mag->busDev, BUS_SPEED_FAST);
     }
 
-    if (busDev->busType == BUSTYPE_I2C) {
+    if (mag->busDev->busType == BUSTYPE_I2C) {
         for (int retryCount = 0; retryCount < DETECTION_MAX_RETRY_COUNT; retryCount++) {
-            busWrite(busDev, MPU_RA_PWR_MGMT_1, 0x8); // Disable gyro
+            busWrite(mag->busDev, MPU_RA_PWR_MGMT_1, 0x8); // Disable gyro
             delay(15);
 
-            busWrite(busDev, MPU_RA_USER_CTRL, 0x0); // Disable I2C master
+            busWrite(mag->busDev, MPU_RA_USER_CTRL, 0x0); // Disable I2C master
             delay(15);
 
-            busWrite(busDev, MPU_RA_INT_PIN_CFG, 0x02); // enable pass through I2C mode
+            busWrite(mag->busDev, MPU_RA_INT_PIN_CFG, 0x02); // enable pass through I2C mode
             delay(15);
 
             // open real mag I2C device
