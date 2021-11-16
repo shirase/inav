@@ -320,7 +320,13 @@ bool mpu9250CompassDetect(magDev_t * mag)
 {
     // FIXME: We need to use gyro_to_use here, not mag_to_use
     mag->busDev = busDeviceOpen(BUSTYPE_SPI, DEVHW_MPU9250, mag->magSensorToUse);
-    if (mag->busDev == NULL) {
+    if (mag->busDev) {
+        // Check if Gyro driver initialized the chip
+        mpuContextData_t * ctx = busDeviceGetScratchpadMemory(mag->busDev);
+        if (ctx->chipMagicNumber != 0x9250) {
+            return false;
+        }
+    } else {
         // If not use MPU9250 as gyro, init MPU9250
 
         mag->busDev = busDeviceInit(BUSTYPE_ANY, DEVHW_MPU9250, mag->magSensorToUse, OWNER_COMPASS);
@@ -335,12 +341,6 @@ bool mpu9250CompassDetect(magDev_t * mag)
     }
 
     if (mag->busDev->busType == BUSTYPE_SPI) {
-        // Check if Gyro driver initialized the chip
-        mpuContextData_t * ctx = busDeviceGetScratchpadMemory(mag->busDev);
-        if (ctx->chipMagicNumber != 0x9250) {
-            return false;
-        }
-
         busSetSpeed(mag->busDev, BUS_SPEED_INITIALIZATION);
 
         for (int retryCount = 0; retryCount < DETECTION_MAX_RETRY_COUNT; retryCount++) {
