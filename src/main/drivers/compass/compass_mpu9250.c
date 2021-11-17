@@ -107,9 +107,6 @@ static int16_t cachedMagData[3];
 
 static bool mpu9250SlaveI2CRead(magDev_t * mag, uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len)
 {
-    // clean read register
-    busReadBuf(mag->busDev, MPU_RA_EXT_SENS_DATA_00, buf, len);
-
     // Setting up MPU9250's I2C master to read from AK8963 via internal I2C bus
     busWrite(mag->busDev, MPU_RA_I2C_SLV0_ADDR, addr | READ_FLAG);     // set I2C slave address for read
     busWrite(mag->busDev, MPU_RA_I2C_SLV0_REG, reg);                   // set I2C slave register
