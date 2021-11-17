@@ -311,6 +311,8 @@ main_sources(COMMON_SRC
     fc/settings.h
     fc/stats.c
     fc/stats.h
+    fc/debug.c
+    fc/debug.h
 
     flight/failsafe.c
     flight/failsafe.h

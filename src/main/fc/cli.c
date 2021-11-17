@@ -123,6 +123,7 @@ uint8_t cliMode = 0;
 #include "telemetry/frsky_d.h"
 #include "telemetry/telemetry.h"
 #include "build/debug.h"
+#include "fc/debug.h"
 
 #if MCU_FLASH_SIZE > 128
 #define PLAY_SOUND
@@ -3286,6 +3287,8 @@ static void cliStatus(char *cmdline)
     if (getPwmInitError() != PWM_INIT_ERROR_NONE) {
         cliPrintLinef("PWM output init error: %s", getPwmInitErrorMessage());
     }
+
+    cliPrintLinef("Debug data: \n%s", getDebugData());
 }
 
 #ifndef SKIP_TASK_STATISTICS

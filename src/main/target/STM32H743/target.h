@@ -25,6 +25,7 @@
 
 #define LED0                    PC0
 #define LED1                    PC1
+#define LED2                    PC2
 
 #define BEEPER                  PA15
 #define BEEPER_INVERTED
