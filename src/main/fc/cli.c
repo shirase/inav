@@ -3288,7 +3288,11 @@ static void cliStatus(char *cmdline)
         cliPrintLinef("PWM output init error: %s", getPwmInitErrorMessage());
     }
 
-    cliPrintLinef("Debug data: \n%s", getDebugData());
+    uint8_t reg = (uint8_t)strtol(cmdline, NULL, 0);
+    cliPrintLinef("debugMag: %x %x\n", reg, debugMag(reg));
+    cliPrintLinef("debugMag2: %x %x\n", reg, debugMag2(reg));
+
+    //cliPrintLinef("Debug data: \n%s", getDebugData());
 }
 
 #ifndef SKIP_TASK_STATISTICS
