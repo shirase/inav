@@ -32,6 +32,7 @@
 #include "drivers/accgyro/accgyro.h"
 #include "drivers/accgyro/accgyro_mpu.h"
 #include "drivers/accgyro/accgyro_mpu9250.h"
+#include "drivers/io.h"
 
 #if defined(USE_IMU_MPU9250)
 
