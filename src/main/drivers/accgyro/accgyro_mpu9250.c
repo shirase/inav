@@ -150,6 +150,14 @@ bool mpu9250GyroDetect(gyroDev_t *gyro)
         return false;
     }
 
+#ifdef MPU9250_BARO_CS
+    // need set baro CS pin
+    IO_t io = IOGetByTag(IO_TAG(MPU9250_BARO_CS));
+    IOInit(io, OWNER_BARO, RESOURCE_SPI_CS, 0);
+    IOConfigGPIO(io, SPI_IO_CS_CFG);
+    IOHi(io);
+#endif
+
     if (!mpu9250DeviceDetect(gyro->busDev)) {
         busDeviceDeInit(gyro->busDev);
         return false;
