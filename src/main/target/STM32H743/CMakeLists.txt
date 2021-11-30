@@ -1,1 +1,1 @@
-target_stm32h743xi(STM32H743)
+target_stm32h743xi(STM32H743 HSE_MHZ 8)
