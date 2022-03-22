@@ -2,7 +2,7 @@ include(gcc)
 set(arm_none_eabi_triplet "arm-none-eabi")
 
 # Keep version in sync with the distribution files below
-set(arm_none_eabi_gcc_version "10.2.1")
+set(arm_none_eabi_gcc_version "10.1.0")
 set(arm_none_eabi_base_url "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major")
 # suffix and checksum
 set(arm_none_eabi_win32 "win32.zip" 5ee6542a2af847934177bc8fa1294c0d)
