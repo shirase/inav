@@ -126,6 +126,12 @@ bool cliMode = false;
 #include "telemetry/telemetry.h"
 #include "build/debug.h"
 
+#ifdef CLI_DEBUG
+#include <stdio.h>
+#include <stdarg.h>
+#include "drivers/bus.h"
+#endif
+
 #if MCU_FLASH_SIZE > 128
 #define PLAY_SOUND
 #endif
@@ -3128,6 +3134,78 @@ static void cliSave(char *cmdline)
     cliReboot();
 }
 
+#ifdef CLI_DEBUG
+#define CLI_DEBUG_MAX_ARGS 10
+#define CLI_DEBUG_ARGS_LEN 50
+
+#define NARGS_SEQ(_1,_2,_3,_4,_5,_6,_7,_8,N,...) N
+#define NARGS(...) NARGS_SEQ(__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1)
+#define parseArgs(cmdline, ...) nparseArgs(cmdline, NARGS(__VA_ARGS__), __VA_ARGS__)
+
+static void nparseArgs(char *cmdline, int n, ...)
+{
+    va_list args;
+    va_start(args, cmdline);
+
+    while(*cmdline == ' ') ++cmdline; // ignore spaces
+    while (n--) {
+        //num = va_arg(args, int);
+    }
+
+    va_end(args);
+}
+
+static void cliDbgSpiRead(char *cmdline)
+{
+    UNUSED(cmdline);
+
+    while(*cmdline == ' ') ++cmdline; // ignore spaces
+
+    uint8_t reg;
+    sscanf(cmdline, "%x", &reg);
+    
+    busDevice_t * dev = busDeviceOpen(BUSTYPE_SPI, DEVHW_MPU6500, 0);
+    if (dev == NULL) {
+        cliPrint("busDeviceOpen fail");
+        dev = busDeviceInit(BUSTYPE_ANY, DEVHW_MPU6500, 0, OWNER_MPU);
+
+        if (dev == NULL) {
+            cliPrint("busDeviceInit fail");
+            return;
+        }
+    }
+    
+    uint8_t tmp;
+    busRead(dev, reg, &tmp);
+    cliPrintf("reg = %x val = %x", reg, tmp);
+}
+
+static void cliDbgSpiWrite(char *cmdline)
+{
+    UNUSED(cmdline);
+
+    while(*cmdline == ' ') ++cmdline; // ignore spaces
+
+    uint8_t reg;
+    uint8_t data;
+    sscanf(cmdline, "%x%x", &reg, &data);
+    
+    busDevice_t * dev = busDeviceOpen(BUSTYPE_SPI, DEVHW_MPU6500, 0);
+    if (dev == NULL) {
+        cliPrint("busDeviceOpen fail");
+        dev = busDeviceInit(BUSTYPE_ANY, DEVHW_MPU6500, 0, OWNER_MPU);
+
+        if (dev == NULL) {
+            cliPrint("busDeviceInit fail");
+            return;
+        }
+    }
+    
+    busWrite(dev, reg, data);
+    cliPrintf("reg = %x data = %x", reg, data);
+}
+#endif
+
 static void cliDefaults(char *cmdline)
 {
     UNUSED(cmdline);
@@ -3839,6 +3917,10 @@ const clicmd_t cmdTable[] = {
 #ifdef USE_LED_STRIP
     CLI_COMMAND_DEF("color", "configure colors", NULL, cliColor),
     CLI_COMMAND_DEF("mode_color", "configure mode and special colors", NULL, cliModeColor),
+#endif
+#ifdef CLI_DEBUG
+    CLI_COMMAND_DEF("dbg_spi_read", "Debug spi read", "register", cliDbgSpiRead),
+    CLI_COMMAND_DEF("dbg_spi_write", "Debug spi write", "register, data", cliDbgSpiWrite),
 #endif
     CLI_COMMAND_DEF("defaults", "reset to defaults and reboot", NULL, cliDefaults),
     CLI_COMMAND_DEF("dfu", "DFU mode on reboot", NULL, cliDfu),
