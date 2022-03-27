@@ -92,8 +92,8 @@
 #define I2C1_SDA                PB7
 
 #define USE_I2C_DEVICE_2
-#define I2C2_SCL                PE9
-#define I2C2_SDA                PE10
+#define I2C2_SCL                PB10
+#define I2C2_SDA                PB11
 
 #define USE_BARO
 #define BARO_I2C_BUS            BUS_I2C2
