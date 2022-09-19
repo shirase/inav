@@ -61,17 +61,12 @@
 #define NAV_FW_BASE_PITCH_CUTOFF_FREQUENCY_HZ     2.0f
 #define NAV_FW_BASE_ROLL_CUTOFF_FREQUENCY_HZ     10.0f
 
-// If we are going slower than NAV_FW_MIN_VEL_SPEED_BOOST - boost throttle to fight against the wind
-#define NAV_FW_THROTTLE_SPEED_BOOST_GAIN        1.5f
-#define NAV_FW_MIN_VEL_SPEED_BOOST              700.0f      // 7 m/s
-
 // If this is enabled navigation won't be applied if velocity is below 3 m/s
 //#define NAV_FW_LIMIT_MIN_FLY_VELOCITY
 
 static bool isPitchAdjustmentValid = false;
 static bool isRollAdjustmentValid = false;
 static bool isYawAdjustmentValid = false;
-static float throttleSpeedAdjustment = 0;
 static int32_t navHeadingError;
 
 // Calculates the cutoff frequency for smoothing out roll/pitch commands
@@ -88,7 +83,6 @@ void resetAntennaTrackerAltitudeController(void)
     navPidReset(&posControl.pids.fw_alt);
     posControl.rcAdjustment[PITCH] = 0;
     isPitchAdjustmentValid = false;
-    throttleSpeedAdjustment = 0;
 }
 
 // Position to velocity controller for Z axis
@@ -249,17 +243,13 @@ void applyAntennaTrackerPitchRollController(navigationFSMStateFlags_t navStateFl
     if (isRollAdjustmentValid && (navStateFlags & NAV_CTL_POS)) {
         // ROLL >0 right, <0 left
         int16_t rollCorrection = constrain(posControl.rcAdjustment[ROLL], -DEGREES_TO_DECIDEGREES(navConfig()->fw.max_bank_angle), DEGREES_TO_DECIDEGREES(navConfig()->fw.max_bank_angle));
-        //rcCommand[ROLL] = pidAngleToRcCommand(rollCorrection, pidProfile()->max_angle_inclination[FD_ROLL]);
-        int16_t maxInclination = pidProfile()->max_angle_inclination[FD_ROLL];
-        rcCommand[ROLL] = scaleRangef((float) constrainf(rollCorrection, (float) -maxInclination, (float) maxInclination), (float) -maxInclination, (float) maxInclination, -1000.0f, 1000.0f);
+        rcCommand[ROLL] = pidAngleToRcCommand(rollCorrection, pidProfile()->max_angle_inclination[FD_ROLL]);
     }
 
     if (isPitchAdjustmentValid && (navStateFlags & NAV_CTL_ALT)) {
         // PITCH >0 dive, <0 climb
         int16_t pitchCorrection = constrain(posControl.rcAdjustment[PITCH], -DEGREES_TO_DECIDEGREES(navConfig()->fw.max_dive_angle), DEGREES_TO_DECIDEGREES(navConfig()->fw.max_climb_angle));
-        //rcCommand[PITCH] = -pidAngleToRcCommand(pitchCorrection, pidProfile()->max_angle_inclination[FD_PITCH]);
-        int16_t maxInclination = pidProfile()->max_angle_inclination[FD_PITCH];
-        rcCommand[PITCH] = -scaleRangef((float) constrainf(pitchCorrection, (float) -maxInclination, (float) maxInclination), (float) -maxInclination, (float) maxInclination, -1000.0f, 1000.0f);
+        rcCommand[PITCH] = -pidAngleToRcCommand(pitchCorrection, pidProfile()->max_angle_inclination[FD_PITCH]);
     }
 }
 
