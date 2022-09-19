@@ -284,3 +284,5 @@
 #ifdef OMNIBUSF4PRO
 #define CURRENT_METER_SCALE   265
 #endif
+
+#define ANTENNA_TRACKER

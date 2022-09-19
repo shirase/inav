@@ -479,6 +479,10 @@ void applyFixedWingPositionController(timeUs_t currentTimeUs);
 float processHeadingYawController(timeDelta_t deltaMicros, int32_t navHeadingError, bool errorIsDecreasing);
 void applyFixedWingNavigationController(navigationFSMStateFlags_t navStateFlags, timeUs_t currentTimeUs);
 
+#ifdef ANTENNA_TRACKER
+void applyAntennaTrackerNavigationController(navigationFSMStateFlags_t navStateFlags, timeUs_t currentTimeUs);
+#endif
+
 bool isFixedWingLandingDetected(void);
 
 void calculateFixedWingInitialHoldPosition(fpVector3_t * pos);

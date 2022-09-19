@@ -541,6 +541,7 @@ main_sources(COMMON_SRC
     navigation/navigation.c
     navigation/navigation.h
     navigation/navigation_fixedwing.c
+    navigation/navigation_antenna_tracker.c
     navigation/navigation_fw_launch.c
     navigation/navigation_geo.c
     navigation/navigation_multicopter.c
