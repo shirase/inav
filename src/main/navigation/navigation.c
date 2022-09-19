@@ -3498,6 +3498,11 @@ bool navigationRequiresAngleMode(void)
  *-----------------------------------------------------------*/
 bool navigationRequiresTurnAssistance(void)
 {
+#ifdef ANTENNA_TRACKER
+    if (STATE(ANTENNA_TRACKER_STATE)) {
+        return false;
+    } else
+#endif
     const navigationFSMStateFlags_t currentState = navGetStateFlags(posControl.navState);
     if (STATE(FIXED_WING_LEGACY)) {
         // For airplanes turn assistant is always required when controlling position

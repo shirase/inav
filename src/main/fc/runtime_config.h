@@ -137,6 +137,9 @@ typedef enum {
     FW_HEADING_USE_YAW                  = (1 << 24),
     ANTI_WINDUP_DEACTIVATED             = (1 << 25),
     LANDING_DETECTED                    = (1 << 26),
+#ifdef ANTENNA_TRACKER
+    ANTENNA_TRACKER_STATE               = (1 << 27),
+#endif
 } stateFlags_t;
 
 #define DISABLE_STATE(mask) (stateFlags &= ~(mask))

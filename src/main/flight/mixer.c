@@ -150,6 +150,9 @@ void mixerUpdateStateFlags(void)
     DISABLE_STATE(BOAT);
     DISABLE_STATE(AIRPLANE);
     DISABLE_STATE(MOVE_FORWARD_ONLY);
+#ifdef ANTENNA_TRACKER
+    DISABLE_STATE(ANTENNA_TRACKER_STATE);
+#endif
 
     if (mixerConfig()->platformType == PLATFORM_AIRPLANE) {
         ENABLE_STATE(FIXED_WING_LEGACY);
@@ -173,7 +176,16 @@ void mixerUpdateStateFlags(void)
     } else if (mixerConfig()->platformType == PLATFORM_HELICOPTER) {
         ENABLE_STATE(MULTIROTOR);
         ENABLE_STATE(ALTITUDE_CONTROL);
+    } 
+#ifdef ANTENNA_TRACKER
+    else if (mixerConfig()->platformType == PLATFORM_ANTENNA_TRACKER) {
+        ENABLE_STATE(ANTENNA_TRACKER_STATE);
+        ENABLE_STATE(FIXED_WING_LEGACY);
+        ENABLE_STATE(AIRPLANE);
+        ENABLE_STATE(ALTITUDE_CONTROL);
+        ENABLE_STATE(MOVE_FORWARD_ONLY);
     }
+#endif
 
     if (mixerConfig()->hasFlaps) {
         ENABLE_STATE(FLAPERON_AVAILABLE);

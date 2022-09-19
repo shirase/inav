@@ -39,6 +39,9 @@ typedef enum {
     PLATFORM_TRICOPTER      = 3,
     PLATFORM_ROVER          = 4,
     PLATFORM_BOAT           = 5,
+#ifdef ANTENNA_TRACKER
+    PLATFORM_ANTENNA_TRACKER = 7,
+#endif
     PLATFORM_OTHER          = 6
 } flyingPlatformType_e;
 
