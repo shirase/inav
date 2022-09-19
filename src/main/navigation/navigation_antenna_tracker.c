@@ -111,7 +111,7 @@ static void updateAltitudeVelocityAndPitchController_AT(timeDelta_t deltaMicros)
     posControl.rcAdjustment[PITCH] = targetPitchAngle;
 }
 
-void applyAntennaTrackerAltitudeAndThrottleController(timeUs_t currentTimeUs)
+void applyAntennaTrackerAltitudeController(timeUs_t currentTimeUs)
 {
     static timeUs_t previousTimePositionUpdate = 0;         // Occurs @ altitude sensor update rate (max MAX_ALTITUDE_UPDATE_RATE_HZ)
 
@@ -242,7 +242,7 @@ void applyAntennaTrackerPositionController(timeUs_t currentTimeUs)
     }
 }
 
-void applyAntennaTrackerPitchRollThrottleController(navigationFSMStateFlags_t navStateFlags, timeUs_t currentTimeUs)
+void applyAntennaTrackerPitchRollController(navigationFSMStateFlags_t navStateFlags, timeUs_t currentTimeUs)
 {
     UNUSED(currentTimeUs);
 
@@ -276,7 +276,7 @@ void applyAntennaTrackerNavigationController(navigationFSMStateFlags_t navStateF
             resetAntennaTrackerAltitudeController();
             setDesiredPosition(&navGetCurrentActualPositionAndVelocity()->pos, posControl.actualState.yaw, NAV_POS_UPDATE_Z);
         } else {
-            applyAntennaTrackerAltitudeAndThrottleController(currentTimeUs);
+            applyAntennaTrackerAltitudeController(currentTimeUs);
         }
     }
 
@@ -290,7 +290,7 @@ void applyAntennaTrackerNavigationController(navigationFSMStateFlags_t navStateF
 
     //if (navStateFlags & NAV_CTL_YAW)
     if ((navStateFlags & NAV_CTL_ALT) || (navStateFlags & NAV_CTL_POS)) {
-        applyAntennaTrackerPitchRollThrottleController(navStateFlags, currentTimeUs);
+        applyAntennaTrackerPitchRollController(navStateFlags, currentTimeUs);
     }
 
     if (FLIGHT_MODE(SOARING_MODE) && navConfig()->general.flags.soaring_motor_stop) {
