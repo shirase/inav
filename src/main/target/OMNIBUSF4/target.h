@@ -285,4 +285,4 @@
 #define CURRENT_METER_SCALE   265
 #endif
 
-#define ANTENNA_TRACKER
+#define USE_ANTENNA_TRACKER
