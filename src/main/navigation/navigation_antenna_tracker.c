@@ -72,11 +72,11 @@ static int32_t navHeadingError;
 // Calculates the cutoff frequency for smoothing out roll/pitch commands
 // control_smoothness valid range from 0 to 9
 // resulting cutoff_freq ranging from baseFreq downwards to ~0.11Hz
-static float getSmoothnessCutoffFreq(float baseFreq)
+/*static float getSmoothnessCutoffFreq(float baseFreq)
 {
     uint16_t smoothness = 10 - navConfig()->fw.control_smoothness;
     return 0.001f * baseFreq * (float)(smoothness*smoothness*smoothness) + 0.1f;
-}
+}*/
 
 void resetAntennaTrackerAltitudeController(void)
 {
@@ -86,7 +86,7 @@ void resetAntennaTrackerAltitudeController(void)
 }
 
 // Position to velocity controller for Z axis
-static void updateAltitudeVelocityAndPitchController_AT(timeDelta_t deltaMicros)
+static void updateAltitudePitchController_AT(timeDelta_t deltaMicros)
 {
     UNUSED(deltaMicros);
 
@@ -116,7 +116,7 @@ void applyAntennaTrackerAltitudeController(timeUs_t currentTimeUs)
 
             // Check if last correction was not too long ago
             if (deltaMicrosPositionUpdate < MAX_POSITION_UPDATE_INTERVAL_US) {
-                updateAltitudeVelocityAndPitchController_AT(deltaMicrosPositionUpdate);
+                updateAltitudePitchController_AT(deltaMicrosPositionUpdate);
             }
             else {
                 // Position update has not occurred in time (first iteration or glitch), reset altitude controller
@@ -160,6 +160,34 @@ void resetAntennaTrackerPositionController(void)
     pt1FilterReset(&fwPosControllerCorrectionFilterState, 0.0f);
 }
 
+float processAntennaTrackerHeadingYawController(timeDelta_t deltaMicros, int32_t navHeadingError, bool errorIsDecreasing) {
+    static float limit = 0.0f;
+
+    if (limit == 0.0f) {
+        limit = pidProfile()->navFwPosHdgPidsumLimit * 100.0f;
+    }
+
+    const pidControllerFlags_e yawPidFlags = errorIsDecreasing ? PID_SHRINK_INTEGRATOR : 0;
+
+    const float yawAdjustment = navPidApply2(
+        &posControl.pids.fw_heading,
+        0,
+        applyDeadband(navHeadingError, navConfig()->fw.yawControlDeadband * 100),
+        US2S(deltaMicros),
+        -limit,
+        limit,
+        yawPidFlags
+        ) * 0.01f;
+
+    DEBUG_SET(DEBUG_NAV_YAW, 0, posControl.pids.fw_heading.proportional);
+    DEBUG_SET(DEBUG_NAV_YAW, 1, posControl.pids.fw_heading.integral);
+    DEBUG_SET(DEBUG_NAV_YAW, 2, posControl.pids.fw_heading.derivative);
+    DEBUG_SET(DEBUG_NAV_YAW, 3, navHeadingError);
+    DEBUG_SET(DEBUG_NAV_YAW, 4, posControl.pids.fw_heading.output_constrained);
+
+    return yawAdjustment;
+}
+
 static void updatePositionHeadingController_AT(timeUs_t currentTimeUs, timeDelta_t deltaMicros)
 {
     UNUSED(currentTimeUs);
@@ -187,7 +215,7 @@ static void updatePositionHeadingController_AT(timeUs_t currentTimeUs, timeDelta
         previousTimeMonitoringUpdate = currentTimeUs;
     }
 
-    // Only allow PID integrator to shrink if error is decreasing over time
+    /*// Only allow PID integrator to shrink if error is decreasing over time
     const pidControllerFlags_e pidFlags = PID_DTERM_FROM_ERROR | (errorIsDecreasing ? PID_SHRINK_INTEGRATOR : 0);
 
     // Input error in (deg*100), output roll angle (deg*100)
@@ -200,7 +228,9 @@ static void updatePositionHeadingController_AT(timeUs_t currentTimeUs, timeDelta
     rollAdjustment = pt1FilterApply4(&fwPosControllerCorrectionFilterState, rollAdjustment, getSmoothnessCutoffFreq(NAV_FW_BASE_ROLL_CUTOFF_FREQUENCY_HZ), US2S(deltaMicros));
 
     // Convert rollAdjustment to decidegrees (rcAdjustment holds decidegrees)
-    posControl.rcAdjustment[ROLL] = CENTIDEGREES_TO_DECIDEGREES(rollAdjustment);
+    posControl.rcAdjustment[ROLL] = CENTIDEGREES_TO_DECIDEGREES(rollAdjustment);*/
+
+    posControl.rcAdjustment[YAW] = processAntennaTrackerHeadingYawController(deltaMicros, navHeadingError, errorIsDecreasing);
 }
 
 void applyAntennaTrackerPositionController(timeUs_t currentTimeUs)

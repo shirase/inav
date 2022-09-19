@@ -3258,7 +3258,7 @@ void applyWaypointNavigationAndAltitudeHold(void)
     if (STATE(ROVER) || STATE(BOAT)) {
         applyRoverBoatNavigationController(navStateFlags, currentTimeUs);
     } else if (STATE(FIXED_WING_LEGACY)) {
-#ifdef ANTENNA_TRACKER
+#ifdef USE_ANTENNA_TRACKER
         applyAntennaTrackerNavigationController(navStateFlags, currentTimeUs);
 #else
         applyFixedWingNavigationController(navStateFlags, currentTimeUs);
@@ -3498,10 +3498,10 @@ bool navigationRequiresAngleMode(void)
  *-----------------------------------------------------------*/
 bool navigationRequiresTurnAssistance(void)
 {
-#ifdef ANTENNA_TRACKER
-    if (STATE(ANTENNA_TRACKER_STATE)) {
+#ifdef USE_ANTENNA_TRACKER
+    if (STATE(ANTENNA_TRACKER)) {
         return false;
-    } else
+    }
 #endif
     const navigationFSMStateFlags_t currentState = navGetStateFlags(posControl.navState);
     if (STATE(FIXED_WING_LEGACY)) {
