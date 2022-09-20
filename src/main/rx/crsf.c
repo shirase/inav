@@ -42,6 +42,11 @@ FILE_COMPILE_FOR_SPEED
 #include "rx/crsf.h"
 
 #include "telemetry/crsf.h"
+
+#include "common/streambuf.h"
+#include "navigation/navigation.h"
+#include "navigation/navigation_private.h"
+
 #define CRSF_TIME_NEEDED_PER_FRAME_US   1100 // 700 ms + 400 ms for potential ad-hoc request
 #define CRSF_TIME_BETWEEN_FRAMES_US     6667 // At fastest, frames are sent by the transmitter every 6.667 milliseconds, 150 Hz
 
@@ -180,6 +185,26 @@ STATIC_UNIT_TESTED void crsfDataReceive(uint16_t c, void *rxCallbackData)
                             }
                             break;
                         }
+#endif
+#ifdef USE_ANTENNA_TRACKER
+                        case CRSF_FRAMETYPE_GPS:
+                            if (STATE(ANTENNA_TRACKER)) {
+                                gpsSolutionData_t _gpsSol;
+
+                                sbuf_t payload;
+                                sbuf_t *payloadBuf = sbufInit(&payload, crsfFrame.frame.payload, crsfFrame.frame.payload + crsfFrame.frame.frameLength - 2);
+                                _gpsSol.llh.lat = sbufReadU32(payloadBuf);
+                                _gpsSol.llh.lat = sbufReadU32(payloadBuf);
+                                _gpsSol.llh.lon = sbufReadU32(payloadBuf);
+                                _gpsSol.groundSpeed = (sbufReadU16(payloadBuf) * 100 - 50) / 36;
+                                _gpsSol.groundCourse = CENTIDEGREES_TO_DECIDEGREES(sbufReadU16(payloadBuf));
+
+                                fpVector3_t pos;
+                                if (geoConvertGeodeticToLocalOrigin(&pos, &_gpsSol.llh, GEO_ALT_ABSOLUTE)) {
+                                    setDesiredPosition(&pos, 0, NAV_POS_UPDATE_XY | NAV_POS_UPDATE_Z);
+                                }
+                            }
+                            break;
 #endif
                         default:
                             break;

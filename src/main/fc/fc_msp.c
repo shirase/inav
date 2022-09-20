@@ -3308,23 +3308,24 @@ static mspResult_e mspProcessSensorCommand(uint16_t cmdMSP, sbuf_t *src)
 #ifdef USE_ANTENNA_TRACKER
 static bool mspProcessAntennaTrackerCommand(uint16_t cmdMSP, sbuf_t *src)
 {
-    gpsSolutionData_t _gpsSol;
-
     switch (cmdMSP) {
         case MSP_RAW_GPS:
-            _gpsSol.fixType = sbufReadU8(src);
-            _gpsSol.numSat = sbufReadU8(src);
-            _gpsSol.llh.lat = sbufReadU32(src);
-            _gpsSol.llh.lon = sbufReadU32(src);
-            _gpsSol.llh.alt = sbufReadU16(src) * 100;
-            _gpsSol.groundSpeed = sbufReadU16(src);
-            _gpsSol.groundCourse = sbufReadU16(src);
-            _gpsSol.hdop = sbufReadU16(src);
+            do {
+                gpsSolutionData_t _gpsSol;
+                _gpsSol.fixType = sbufReadU8(src);
+                _gpsSol.numSat = sbufReadU8(src);
+                _gpsSol.llh.lat = sbufReadU32(src);
+                _gpsSol.llh.lon = sbufReadU32(src);
+                _gpsSol.llh.alt = sbufReadU16(src) * 100;
+                _gpsSol.groundSpeed = sbufReadU16(src);
+                _gpsSol.groundCourse = sbufReadU16(src);
+                _gpsSol.hdop = sbufReadU16(src);
 
-            fpVector3_t pos;
-            if (geoConvertGeodeticToLocalOrigin(&pos, &_gpsSol.llh, GEO_ALT_ABSOLUTE)) {
-                setDesiredPosition(&pos, 0, NAV_POS_UPDATE_XY | NAV_POS_UPDATE_Z);
-            }
+                fpVector3_t pos;
+                if (geoConvertGeodeticToLocalOrigin(&pos, &_gpsSol.llh, GEO_ALT_ABSOLUTE)) {
+                    setDesiredPosition(&pos, 0, NAV_POS_UPDATE_XY | NAV_POS_UPDATE_Z);
+                }
+            } while (0);
 
             return true;
     }
