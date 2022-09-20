@@ -3258,12 +3258,13 @@ void applyWaypointNavigationAndAltitudeHold(void)
     if (STATE(ROVER) || STATE(BOAT)) {
         applyRoverBoatNavigationController(navStateFlags, currentTimeUs);
     } else if (STATE(FIXED_WING_LEGACY)) {
-#ifdef USE_ANTENNA_TRACKER
-        applyAntennaTrackerNavigationController(navStateFlags, currentTimeUs);
-#else
         applyFixedWingNavigationController(navStateFlags, currentTimeUs);
-#endif
+    } 
+#ifdef USE_ANTENNA_TRACKER
+    else if (STATE(ANTENNA_TRACKER)) {
+        applyAntennaTrackerNavigationController(navStateFlags, currentTimeUs);
     }
+#endif
     else {
         applyMulticopterNavigationController(navStateFlags, currentTimeUs);
     }
