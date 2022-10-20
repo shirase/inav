@@ -41,6 +41,9 @@ FILE_COMPILE_FOR_SPEED
 #include "rx/rx.h"
 #include "rx/crsf.h"
 
+#include "telemetry/mavlink.h"
+#include "mavlink_types.h"
+
 #include "telemetry/crsf.h"
 #define CRSF_TIME_NEEDED_PER_FRAME_US   1100 // 700 ms + 400 ms for potential ad-hoc request
 #define CRSF_TIME_BETWEEN_FRAMES_US     6667 // At fastest, frames are sent by the transmitter every 6.667 milliseconds, 150 Hz
@@ -58,6 +61,8 @@ static serialPort_t *serialPort;
 static timeUs_t crsfFrameStartAt = 0;
 static uint8_t telemetryBuf[CRSF_FRAME_SIZE_MAX];
 static uint8_t telemetryBufLen = 0;
+
+extern serialPort_t *mavlinkPort;
 
 // The power levels represented by uplinkTXPower above in mW (250mW added to full TX in v4.00 firmware, 50mW added for ExpressLRS)
 const uint16_t crsfPowerStates[] = {0, 10, 25, 100, 500, 1000, 2000, 250, 50};
@@ -178,6 +183,13 @@ STATIC_UNIT_TESTED void crsfDataReceive(uint16_t c, void *rxCallbackData)
                             uint8_t *frameStart = (uint8_t *)&crsfFrame.frame.payload + CRSF_FRAME_ORIGIN_DEST_SIZE;
                             if (bufferCrsfMspFrame(frameStart, CRSF_FRAME_RX_MSP_FRAME_SIZE)) {
                                 crsfScheduleMspResponse();
+                            }
+                            break;
+                        }
+                        case CRSF_FRAMETYPE_MAVLINK: {
+                            uint8_t *frameStart = (uint8_t *)&crsfFrame.frame.payload;
+                            if (bufferCrsfMavlinkFrame(frameStart, crsfFrame.frame.frameLength - CRSF_FRAME_LENGTH_TYPE - CRSF_FRAME_LENGTH_CRC)) {
+                                crsfScheduleMavlinkResponse();
                             }
                             break;
                         }

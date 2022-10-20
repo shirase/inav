@@ -23,3 +23,7 @@ void checkMAVLinkTelemetryState(void);
 
 void freeMAVLinkTelemetryPort(void);
 void configureMAVLinkTelemetryPort(void);
+
+bool handleMAVLinkIncomingTelemetry(void);
+
+void setMavlinkSendMessageOutput(sbuf_t *mavlinkOutputBuf);

@@ -62,6 +62,7 @@ FILE_COMPILE_FOR_SPEED
 #include "telemetry/crsf.h"
 #include "telemetry/telemetry.h"
 #include "telemetry/msp_shared.h"
+#include "telemetry/mavlink_shared.h"
 
 
 #define CRSF_CYCLETIME_US                   100000  // 100ms, 10 Hz
@@ -122,6 +123,30 @@ bool handleCrsfMspFrameBuffer(uint8_t payloadSize, mspResponseFnPtr responseFn)
         ATOMIC_BLOCK(NVIC_PRIO_SERIALUART) {
             if (pos >= mspRxBuffer.len) {
                 mspRxBuffer.len = 0;
+                return requestHandled;
+            }
+        }
+    }
+    return requestHandled;
+}
+
+bool handleCrsfMavlinkFrameBuffer(uint8_t payloadSize, mspResponseFnPtr responseFn)
+{
+    bool requestHandled = false;
+    if (!mavlinkRxBuffer.len) {
+        return false;
+    }
+    int pos = 0;
+    while (true) {
+        const int mavlinkFrameLength = mavlinkRxBuffer.bytes[pos];
+        if (handleMavlinkFrame(&mspRxBuffer.bytes[MAVLINK_BUFFER_LENGTH_OFFSET + pos], mavlinkFrameLength)) {
+            while (sendMavlinkReply(payloadSize, responseFn)) {}
+            requestHandled = false;
+        }
+        pos += MAVLINK_BUFFER_LENGTH_OFFSET + mavlinkFrameLength;
+        ATOMIC_BLOCK(NVIC_PRIO_SERIALUART) {
+            if (pos >= mavlinkRxBuffer.len) {
+                mavlinkRxBuffer.len = 0;
                 return requestHandled;
             }
         }
@@ -415,6 +440,13 @@ void crsfScheduleMspResponse(void)
     mspReplyPending = true;
 }
 
+static bool mavlinkReplyPending;
+
+void crsfScheduleMavlinkResponse(void)
+{
+    mavlinkReplyPending = true;
+}
+
 void crsfSendMspResponse(uint8_t *payload)
 {
     sbuf_t crsfPayloadBuf;
@@ -426,6 +458,18 @@ void crsfSendMspResponse(uint8_t *payload)
     crsfSerialize8(dst, CRSF_ADDRESS_RADIO_TRANSMITTER);
     crsfSerialize8(dst, CRSF_ADDRESS_FLIGHT_CONTROLLER);
     crsfSerializeData(dst, (const uint8_t*)payload, CRSF_FRAME_TX_MSP_FRAME_SIZE);
+    crsfFinalize(dst);
+}
+
+void crsfSendMavlinkResponse(uint8_t *payload)
+{
+    sbuf_t crsfPayloadBuf;
+    sbuf_t *dst = &crsfPayloadBuf;
+
+    crsfInitializeFrame(dst);
+    sbufWriteU8(dst, CRSF_FRAME_TX_MSP_FRAME_SIZE + CRSF_FRAME_LENGTH_EXT_TYPE_CRC);
+    crsfSerialize8(dst, CRSF_FRAMETYPE_MAVLINK);
+    crsfSerializeData(dst, (const uint8_t*)payload, CRSF_FRAME_TX_MAVLINK_FRAME_SIZE);
     crsfFinalize(dst);
 }
 #endif
@@ -484,6 +528,7 @@ void initCrsfTelemetry(void)
     deviceInfoReplyPending = false;
 #if defined(USE_MSP_OVER_TELEMETRY)
     mspReplyPending = false;
+    mavlinkReplyPending = false;
 #endif
 
     int index = 0;
@@ -527,6 +572,12 @@ void handleCrsfTelemetry(timeUs_t currentTimeUs)
 #if defined(USE_MSP_OVER_TELEMETRY)
     if (mspReplyPending) {
         mspReplyPending = handleCrsfMspFrameBuffer(CRSF_FRAME_TX_MSP_FRAME_SIZE, &crsfSendMspResponse);
+        crsfLastCycleTime = currentTimeUs; // reset telemetry timing due to ad-hoc request
+        return;
+    }
+
+    if (mavlinkReplyPending) {
+        mavlinkReplyPending = handleCrsfMavlinkFrameBuffer(CRSF_FRAME_TX_MAVLINK_FRAME_SIZE, &crsfSendMavlinkResponse);
         crsfLastCycleTime = currentTimeUs; // reset telemetry timing due to ad-hoc request
         return;
     }

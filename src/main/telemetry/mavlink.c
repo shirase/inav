@@ -324,6 +324,13 @@ void checkMAVLinkTelemetryState(void)
         freeMAVLinkTelemetryPort();
 }
 
+static sbuf_t *mavlinkOutput;
+
+void setMavlinkSendMessageOutput(sbuf_t *_mavlinkOutput)
+{
+    mavlinkOutput = _mavlinkOutput;
+}
+
 static void mavlinkSendMessage(void)
 {
     uint8_t mavBuffer[MAVLINK_MAX_PACKET_LEN];
@@ -337,8 +344,16 @@ static void mavlinkSendMessage(void)
 
     int msgLength = mavlink_msg_to_send_buffer(mavBuffer, &mavSendMsg);
 
-    for (int i = 0; i < msgLength; i++) {
-        serialWrite(mavlinkPort, mavBuffer[i]);
+    if (mavlinkPort) {
+        for (int i = 0; i < msgLength; i++) {
+            serialWrite(mavlinkPort, mavBuffer[i]);
+        }
+    }
+
+    if (mavlinkOutput) {
+        for (int i = 0; i < msgLength; i++) {
+            sbufWriteU8(mavlinkOutput, mavBuffer[i]);
+        }
     }
 }
 
@@ -1055,31 +1070,43 @@ static bool handleIncoming_RC_CHANNELS_OVERRIDE(void) {
     return true;
 }
 
+bool handleMAVLinkIncomingTelemetry(void)
+{
+    switch (mavRecvMsg.msgid) {
+        case MAVLINK_MSG_ID_HEARTBEAT:
+            break;
+        case MAVLINK_MSG_ID_MISSION_CLEAR_ALL:
+            return handleIncoming_MISSION_CLEAR_ALL();
+        case MAVLINK_MSG_ID_MISSION_COUNT:
+            return handleIncoming_MISSION_COUNT();
+        case MAVLINK_MSG_ID_MISSION_ITEM:
+            return handleIncoming_MISSION_ITEM();
+        case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
+            return handleIncoming_MISSION_REQUEST_LIST();
+        case MAVLINK_MSG_ID_MISSION_REQUEST:
+            return handleIncoming_MISSION_REQUEST();
+        case MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE:
+            return handleIncoming_RC_CHANNELS_OVERRIDE();
+        default:
+            return false;
+    }
+}
+bool parseCharMAVLinkIncomingTelemetry(char c)
+{
+    uint8_t result = mavlink_parse_char(0, c, &mavRecvMsg, &mavRecvStatus);
+    if (result == MAVLINK_FRAMING_OK) {
+        return true;
+    }
+    return false;
+}
+
 static bool processMAVLinkIncomingTelemetry(void)
 {
     while (serialRxBytesWaiting(mavlinkPort) > 0) {
         // Limit handling to one message per cycle
         char c = serialRead(mavlinkPort);
-        uint8_t result = mavlink_parse_char(0, c, &mavRecvMsg, &mavRecvStatus);
-        if (result == MAVLINK_FRAMING_OK) {
-            switch (mavRecvMsg.msgid) {
-                case MAVLINK_MSG_ID_HEARTBEAT:
-                    break;
-                case MAVLINK_MSG_ID_MISSION_CLEAR_ALL:
-                    return handleIncoming_MISSION_CLEAR_ALL();
-                case MAVLINK_MSG_ID_MISSION_COUNT:
-                    return handleIncoming_MISSION_COUNT();
-                case MAVLINK_MSG_ID_MISSION_ITEM:
-                    return handleIncoming_MISSION_ITEM();
-                case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
-                    return handleIncoming_MISSION_REQUEST_LIST();
-                case MAVLINK_MSG_ID_MISSION_REQUEST:
-                    return handleIncoming_MISSION_REQUEST();
-                case MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE:
-                    return handleIncoming_RC_CHANNELS_OVERRIDE();
-                default:
-                    return false;
-            }
+        if (parseCharMAVLinkIncomingTelemetry(c)) {
+            return handleMAVLinkIncomingTelemetry();
         }
     }
 
