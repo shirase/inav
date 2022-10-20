@@ -18,7 +18,10 @@
 #include "telemetry/msp_shared.h"
 #include "telemetry/smartport.h"
 
+#include "common/crc.h"
+
 #define TELEMETRY_MSP_VERSION    1
+#define TELEMETRY_MSP_VERSION_2  2
 #define TELEMETRY_MSP_VER_SHIFT  5
 #define TELEMETRY_MSP_VER_MASK   (0x7 << TELEMETRY_MSP_VER_SHIFT)
 #define TELEMETRY_MSP_ERROR_FLAG (1 << 5)
@@ -100,16 +103,24 @@ bool handleMspFrame(uint8_t *frameStart, int frameLength)
     const uint8_t seqNumber = header & TELEMETRY_MSP_SEQ_MASK;
     const uint8_t version = (header & TELEMETRY_MSP_VER_MASK) >> TELEMETRY_MSP_VER_SHIFT;
 
-    if (version != TELEMETRY_MSP_VERSION) {
+    if (version != TELEMETRY_MSP_VERSION && version != TELEMETRY_MSP_VERSION_2) {
         sendMspErrorResponse(TELEMETRY_MSP_VER_MISMATCH, 0);
         return true;
     }
 
     if (header & TELEMETRY_MSP_START_FLAG) {
         // first packet in sequence
-        uint8_t mspPayloadSize = sbufReadU8(frameBuf);
-
-        packet->cmd = sbufReadU8(frameBuf);
+        uint16_t mspPayloadSize;
+        if (version == TELEMETRY_MSP_VERSION) {
+            mspPayloadSize = sbufReadU8(frameBuf);
+            packet->cmd = sbufReadU8(frameBuf);
+        }
+        else if (version == TELEMETRY_MSP_VERSION_2) {
+            // little endian
+            mspPayloadSize = sbufReadU16(frameBuf);
+            packet->cmd = sbufReadU16(frameBuf);
+        }
+        
         packet->result = 0;
         packet->buf.ptr = mspPackage.requestBuffer;
         packet->buf.end = mspPackage.requestBuffer + mspPayloadSize;
@@ -168,54 +179,75 @@ bool sendMspReply(uint8_t payloadSize, mspResponseFnPtr responseFn)
     sbuf_t *payloadBuf = sbufInit(&payload, payloadOut, payloadOut + payloadSize);
     sbuf_t *txBuf = &mspPackage.responsePacket->buf;
 
+    // version
+    uint8_t version = mspPackage.responsePacket->cmd < 256 ? TELEMETRY_MSP_VERSION : TELEMETRY_MSP_VERSION_2;
+
     // detect first reply packet
     if (txBuf->ptr == mspPackage.responseBuffer) {
-
         // header
-        uint8_t head = TELEMETRY_MSP_START_FLAG | (seq++ & TELEMETRY_MSP_SEQ_MASK);
+        uint8_t head = TELEMETRY_MSP_START_FLAG | (seq++ & TELEMETRY_MSP_SEQ_MASK) | (version << TELEMETRY_MSP_VER_SHIFT);
         if (mspPackage.responsePacket->result < 0) {
             head |= TELEMETRY_MSP_ERROR_FLAG;
         }
         sbufWriteU8(payloadBuf, head);
 
-        uint8_t size = sbufBytesRemaining(txBuf);
-        sbufWriteU8(payloadBuf, size);
+        if (version == TELEMETRY_MSP_VERSION) {
+            uint8_t size = sbufBytesRemaining(txBuf);
+            sbufWriteU8(payloadBuf, size);
+        } else
+        if (version == TELEMETRY_MSP_VERSION_2) {
+            uint16_t size = sbufBytesRemaining(txBuf);
+            sbufWriteU16(payloadBuf, size);
+            sbufWriteU16(payloadBuf, mspPackage.responsePacket->cmd);
+        }
     } else {
         // header
         sbufWriteU8(payloadBuf, (seq++ & TELEMETRY_MSP_SEQ_MASK));
     }
 
-    const uint8_t bufferBytesRemaining = sbufBytesRemaining(txBuf);
+    const uint16_t bufferBytesRemaining = sbufBytesRemaining(txBuf);
     const uint8_t payloadBytesRemaining = sbufBytesRemaining(payloadBuf);
     uint8_t frame[payloadBytesRemaining];
 
     if (bufferBytesRemaining >= payloadBytesRemaining) {
-
         sbufReadData(txBuf, frame, payloadBytesRemaining);
         sbufAdvance(txBuf, payloadBytesRemaining);
         sbufWriteData(payloadBuf, frame, payloadBytesRemaining);
         responseFn(payloadOut);
 
         return true;
-
     } else {
-
         sbufReadData(txBuf, frame, bufferBytesRemaining);
         sbufAdvance(txBuf, bufferBytesRemaining);
         sbufWriteData(payloadBuf, frame, bufferBytesRemaining);
         sbufSwitchToReader(txBuf, mspPackage.responseBuffer);
 
-        checksum = sbufBytesRemaining(txBuf) ^ mspPackage.responsePacket->cmd;
+        if (version == TELEMETRY_MSP_VERSION) {
+            checksum = sbufBytesRemaining(txBuf) ^ mspPackage.responsePacket->cmd;
 
-        while (sbufBytesRemaining(txBuf)) {
-            checksum ^= sbufReadU8(txBuf);
+            while (sbufBytesRemaining(txBuf)) {
+                checksum ^= sbufReadU8(txBuf);
+            }
+
+            sbufWriteU8(payloadBuf, checksum);
+        } else
+        if (version == TELEMETRY_MSP_VERSION_2) {
+            uint16_t size = sbufBytesRemaining(txBuf);
+            uint16_t cmd = mspPackage.responsePacket->cmd;
+            checksum = crc8_dvb_s2(size, size >> 8);
+            checksum = crc8_dvb_s2(checksum, cmd);
+            checksum = crc8_dvb_s2(checksum, cmd >> 8);
+
+            while (sbufBytesRemaining(txBuf)) {
+                checksum = crc8_dvb_s2(checksum, sbufReadU8(txBuf));
+            }
+
+            sbufWriteU8(payloadBuf, checksum);
         }
-        sbufWriteU8(payloadBuf, checksum);
 
         while (sbufBytesRemaining(payloadBuf)>1) {
             sbufWriteU8(payloadBuf, 0);
         }
-
     }
 
     responseFn(payloadOut);
