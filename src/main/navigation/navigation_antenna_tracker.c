@@ -72,11 +72,11 @@ static int32_t navHeadingError;
 // Calculates the cutoff frequency for smoothing out roll/pitch commands
 // control_smoothness valid range from 0 to 9
 // resulting cutoff_freq ranging from baseFreq downwards to ~0.11Hz
-/*static float getSmoothnessCutoffFreq(float baseFreq)
+static float getSmoothnessCutoffFreq(float baseFreq)
 {
     uint16_t smoothness = 10 - navConfig()->fw.control_smoothness;
     return 0.001f * baseFreq * (float)(smoothness*smoothness*smoothness) + 0.1f;
-}*/
+}
 
 void resetAntennaTrackerAltitudeController(void)
 {
@@ -215,7 +215,7 @@ static void updatePositionHeadingController_AT(timeUs_t currentTimeUs, timeDelta
         previousTimeMonitoringUpdate = currentTimeUs;
     }
 
-    /*// Only allow PID integrator to shrink if error is decreasing over time
+    // Only allow PID integrator to shrink if error is decreasing over time
     const pidControllerFlags_e pidFlags = PID_DTERM_FROM_ERROR | (errorIsDecreasing ? PID_SHRINK_INTEGRATOR : 0);
 
     // Input error in (deg*100), output roll angle (deg*100)
@@ -228,7 +228,7 @@ static void updatePositionHeadingController_AT(timeUs_t currentTimeUs, timeDelta
     rollAdjustment = pt1FilterApply4(&fwPosControllerCorrectionFilterState, rollAdjustment, getSmoothnessCutoffFreq(NAV_FW_BASE_ROLL_CUTOFF_FREQUENCY_HZ), US2S(deltaMicros));
 
     // Convert rollAdjustment to decidegrees (rcAdjustment holds decidegrees)
-    posControl.rcAdjustment[ROLL] = CENTIDEGREES_TO_DECIDEGREES(rollAdjustment);*/
+    posControl.rcAdjustment[ROLL] = CENTIDEGREES_TO_DECIDEGREES(rollAdjustment);
 
     posControl.rcAdjustment[YAW] = processAntennaTrackerHeadingYawController(deltaMicros, navHeadingError, errorIsDecreasing);
 }
@@ -274,6 +274,10 @@ void applyAntennaTrackerPitchRollController(navigationFSMStateFlags_t navStateFl
         // ROLL >0 right, <0 left
         int16_t rollCorrection = constrain(posControl.rcAdjustment[ROLL], -DEGREES_TO_DECIDEGREES(navConfig()->fw.max_bank_angle), DEGREES_TO_DECIDEGREES(navConfig()->fw.max_bank_angle));
         rcCommand[ROLL] = pidAngleToRcCommand(rollCorrection, pidProfile()->max_angle_inclination[FD_ROLL]);
+    }
+
+    if (isYawAdjustmentValid && (navStateFlags & NAV_CTL_POS)) {
+        rcCommand[YAW] = posControl.rcAdjustment[YAW];
     }
 
     if (isPitchAdjustmentValid && (navStateFlags & NAV_CTL_ALT)) {

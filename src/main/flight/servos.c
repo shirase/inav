@@ -264,6 +264,14 @@ void servoMixer(float dT)
         }
     }
 
+#ifdef USE_ANTENNA_TRACKER
+    if (STATE(ANTENNA_TRACKER)) {
+        input[INPUT_STABILIZED_ROLL] = rcCommand[ROLL];
+        input[INPUT_STABILIZED_PITCH] = rcCommand[PITCH];
+        input[INPUT_STABILIZED_YAW] = rcCommand[YAW];
+    }
+#endif
+
     input[INPUT_STABILIZED_ROLL_PLUS] = constrain(input[INPUT_STABILIZED_ROLL], 0, 1000);
     input[INPUT_STABILIZED_ROLL_MINUS] = constrain(input[INPUT_STABILIZED_ROLL], -1000, 0);
     input[INPUT_STABILIZED_PITCH_PLUS] = constrain(input[INPUT_STABILIZED_PITCH], 0, 1000);
